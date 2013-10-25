@@ -1,5 +1,5 @@
 //
-//  FirstViewController.h
+//  FailedViewController.h
 //  KuaiDiTong
 //
 //  Created by Bill on 13-10-25.
@@ -8,6 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface FirstViewController : UIViewController
+@interface FailedViewController : UITableViewController
 
 @end
