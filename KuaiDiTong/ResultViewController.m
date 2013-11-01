@@ -14,6 +14,8 @@
 
 @implementation ResultViewController
 
+@synthesize resultArray;
+
 - (id)initWithStyle:(UITableViewStyle)style
 {
     self = [super initWithStyle:style];
@@ -26,14 +28,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-
-    resultArray=[[NSMutableArray alloc]init];
     
-    [resultArray addObject:@"消息1"];
-    [resultArray addObject:@"消息2"];
-    [resultArray addObject:@"消息3"];
-    [resultArray addObject:@"消息4"];
-    [resultArray addObject:@"消息5"];
 }
 
 - (void)didReceiveMemoryWarning
@@ -59,7 +54,7 @@
     static NSString *CellIdentifier = @"Cell";
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
     
-    cell.textLabel.text=(NSString*)[resultArray objectAtIndex:indexPath.row];
+    cell.textLabel.text=(NSString*)[[resultArray objectAtIndex:indexPath.row]objectForKey:@"context"];
     
     return cell;
 }

@@ -12,4 +12,6 @@
     NSMutableArray* resultArray;
 }
 
+@property(retain,nonatomic)NSMutableArray* resultArray;
+
 @end

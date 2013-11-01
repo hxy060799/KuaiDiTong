@@ -7,6 +7,7 @@
 //
 
 #import "MainViewController.h"
+#import "ResultViewController.h"
 
 @interface MainViewController ()
 
@@ -19,6 +20,13 @@
         
     }
     return self;
+}
+
+-(void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender{
+    if([[segue identifier]isEqualToString:@"Result"]){
+        ResultViewController *viewController=segue.destinationViewController;
+        viewController.resultArray=[NSArray arrayWithArray:(NSArray*)sender];
+    }
 }
 
 - (void)viewDidLoad
@@ -55,13 +63,51 @@
 
 -(void)requestFinished:(ASIHTTPRequest *)request{
     
-    [SVProgressHUD showSuccessWithStatus:@"成功获取快递数据"];
-    
     NSString *responseString=[request responseString];
     
     NSLog(@"%@",responseString);
     
-    [self performSegueWithIdentifier:@"Result" sender:nil];
+    NSDictionary *jsonDic=[self parseJsonData:[request responseData]];
+    
+    if(jsonDic!=nil){
+        if([[[request userInfo]objectForKey:@"Step"]isEqualToString:@"First"]){
+            
+            NSArray *comArray=(NSArray*)jsonDic;
+
+            if([comArray count]>0){
+                NSDictionary *firstComDic=(NSDictionary*)[comArray objectAtIndex:0];
+                NSLog(@"%@",firstComDic);
+                NSString *comcode=(NSString*)[firstComDic objectForKey:@"comCode"];
+                
+                NSURL *url=[NSURL URLWithString:[NSString stringWithFormat:@"http://www.kuaidi100.com/query?type=%@&postid=%@&id=1&show=0&muti=0&order=desc",comcode,numberText.text]];
+                ASIHTTPRequest *request=[ASIHTTPRequest requestWithURL:url];
+                [request setUserInfo:[NSDictionary dictionaryWithObjectsAndKeys:@"Second",@"Step",nil]];
+                [request setDelegate:self];
+                [request startAsynchronous];
+            }else{
+                [SVProgressHUD showErrorWithStatus:@"单号无效"];
+            }
+            
+        }else if([[[request userInfo]objectForKey:@"Step"]isEqualToString:@"Second"]){
+            
+            int status=[[jsonDic objectForKey:@"status"]intValue];
+            
+            NSDictionary *kuaidiDic=[jsonDic objectForKey:@"data"];
+            
+            if(status==200){
+                [SVProgressHUD showSuccessWithStatus:@"成功获取快递数据"];
+            }else{
+                [SVProgressHUD showSuccessWithStatus:@"数据异常"];
+            }
+            
+            [self performSegueWithIdentifier:@"Result" sender:kuaidiDic];
+            
+        }
+    }else{
+        [SVProgressHUD showErrorWithStatus:@"数据解析失败"];
+    }
+    
+    //[self performSegueWithIdentifier:@"Result" sender:nil];
 }
 
 -(void)requestFailed:(ASIHTTPRequest *)request{
@@ -71,6 +117,19 @@
     NSError *error=[request error];
     
     NSLog(@"%@",error.description);
+}
+
+-(NSDictionary*)parseJsonData:(NSData*)data{
+    
+    NSError *error;
+    NSDictionary *json=[NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&error];
+    if(json==nil){
+        NSLog(@"Failed");
+        return nil;
+    }
+    NSLog(@"%@",json);
+    
+    return json;
 }
 
 #pragma mark - Table view data source
@@ -97,8 +156,10 @@
             
             [SVProgressHUD showProgress:-1.0f status:@"努力查询中"];
             
-            NSURL *url=[NSURL URLWithString:@"http://www.baidu.com"];
+            NSURL *url=[NSURL URLWithString:[NSString stringWithFormat:@"http://www.kuaidi100.com/autonumber/auto?num=%@",numberText.text]];
+            //NSURL *url=[NSURL URLWithString:@"http://www.baidu.com"];
             ASIHTTPRequest *request=[ASIHTTPRequest requestWithURL:url];
+            [request setUserInfo:[NSDictionary dictionaryWithObjectsAndKeys:@"First",@"Step",nil]];
             [request setDelegate:self];
             [request startAsynchronous];
             break;
